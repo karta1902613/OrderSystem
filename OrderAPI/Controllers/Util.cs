@@ -75,6 +75,7 @@ namespace OrderAPI.Tools
             }
             return dt;
         }
+
         private static JArray RowToJArray(DataRow row)
         {
             JArray ja = new JArray();
@@ -83,6 +84,45 @@ namespace OrderAPI.Tools
                 ja.Add(Convert.ToString(obj));
             }
             return ja;
+        }
+        public static string ExecuteNonQuery(string conStr, string queryStr)
+        {
+            using (SqlConnection con = new SqlConnection(conStr))
+            {
+                SqlCommand cmd = new SqlCommand(queryStr, con);                
+                try
+                {
+                    cmd.Connection.Open();
+                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.Clear();
+                }
+                catch (Exception ex)
+                {
+                    cmd.Parameters.Clear();
+                    return ex.Message;
+                }
+            }
+            return "";
+        }
+        public static string ExecuteNonQuery(string conStr, string queryStr, SqlParameter[] param)
+        {
+            using (SqlConnection con = new SqlConnection(conStr))
+            {
+                SqlCommand cmd = new SqlCommand(queryStr, con);
+                cmd.Parameters.AddRange(param);
+                try
+                {
+                    cmd.Connection.Open();
+                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.Clear();
+                }
+                catch (Exception ex)
+                {
+                    cmd.Parameters.Clear();
+                    return ex.Message;
+                }
+            }
+            return "";
         }
         public static JArray getJsonForGrid(DataTable tbl1)
         {
