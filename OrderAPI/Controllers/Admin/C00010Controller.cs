@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Dapper;
 using OrderAPI.Model;
+using System.Data.SqlClient;
 
 namespace OrderAPI.Controllers.Admin
 {    
@@ -47,7 +49,7 @@ namespace OrderAPI.Controllers.Admin
             return Content(JsonConvert.SerializeObject(jo), "application/json");
         }
         [HttpPost]
-        public IActionResult UpdateShop(UpdateShop actRow)
+        public IActionResult UpdateShop(ShopData actRow)
         {
             JObject jo = new JObject();
             string strCond = "";
@@ -65,9 +67,9 @@ namespace OrderAPI.Controllers.Admin
                 {
                     strCond += ", shopStatus =  '" + actRow.shopStatus + "' ";
                 }
-                if (!string.IsNullOrEmpty(actRow.isDeliver))
+                if (!string.IsNullOrEmpty(actRow.isDeliver.ToString()))
                 {
-                    if(actRow.isDeliver == "True")
+                    if(actRow.isDeliver)
                     {
                         strCond += ", isDeliver =  1";
                     }
@@ -77,7 +79,7 @@ namespace OrderAPI.Controllers.Admin
                     }
                     
                 }
-                if (!string.IsNullOrEmpty(actRow.limitTime))
+                if (!string.IsNullOrEmpty(actRow.limitTime.ToString()))
                 {
                     strCond += ", limitTime =  '" + actRow.limitTime + "' ";
                 }
@@ -93,6 +95,44 @@ namespace OrderAPI.Controllers.Admin
                 jo.Add("resultCode", resultCode);
             }
             catch(Exception ex)
+            {
+                resultCode = "01";
+                jo.Add("resultCode", resultCode);
+                jo.Add("errMsg", ex.Message);
+            }
+
+            return Content(JsonConvert.SerializeObject(jo), "application/json");
+        }
+
+        public IActionResult AddShop(ShopData actRow)
+        {
+            JObject jo = new JObject();
+            string strCond = "";
+            try
+            {                        
+                actRow.creatUser = "1";//TODO 待之後登入cookie寫好 再來處理
+
+                var param = new DynamicParameters();
+                param.Add("shopName", actRow.shopName);
+                param.Add("shopAddr", actRow.shopAddr);
+                param.Add("shopTel", actRow.shopTel);
+                param.Add("isDeliver", actRow.isDeliver);
+                param.Add("minCost", actRow.minCost);
+                param.Add("statusType", "S0");
+                param.Add("statusId", actRow.statusId);
+                param.Add("shopType", "C0");
+                param.Add("shopStatus", actRow.shopStatus);
+                param.Add("creatUser", actRow.creatUser);
+                param.Add("creatTime", DateTime.Now);
+                param.Add("limitTime", actRow.limitTime);
+                strSql.Clear();
+                strSql.AppendLine("INSERT INTO C10_shop (shopName, shopAddr,shopTel,isDeliver,minCost,limitTime,statusType,statusId,shopType,shopStatus,creatUser,creatTime) ");
+                strSql.AppendLine("VALUES (@shopName, @shopAddr,@shopTel,@isDeliver,@minCost,@limitTime,@statusType,@statusId,@shopType,@shopStatus,@creatUser,@creatTime)");
+                
+                errStr = Tools.Dapper.ExecuteNonQuery(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                jo.Add("resultCode", resultCode);
+            }
+            catch (Exception ex)
             {
                 resultCode = "01";
                 jo.Add("resultCode", resultCode);

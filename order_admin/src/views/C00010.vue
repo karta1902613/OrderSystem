@@ -172,12 +172,8 @@ export default {
       { text: "動作", value: "actions", sortable: false },
     ],
     editedIndex: -1,
-    editedItem: {
-     
-    },
-    defaultItem: {
-  
-    },
+    editedItem: {},
+    defaultItem: {},
   }),
 
   computed: {
@@ -265,11 +261,11 @@ export default {
     },
 
     save() {
+      this.editedItem.statusName = this.selectShopType.name;
+      this.editedItem.shopStatus = this.selectShopType.value;
+      this.editedItem.isDeliverName =
+        this.editedItem.isDeliver == true ? "是" : "否";
       if (this.editedIndex > -1) {
-        this.editedItem.statusName = this.selectShopType.name;
-        this.editedItem.shopStatus = this.selectShopType.value;
-        this.editedItem.isDeliverName =
-          this.editedItem.isDeliver == true ? "是" : "否";
         console.log(this.editedItem);
         let url = this.$store.state.api + "C00010/UpdateShop";
         let actRow = {
@@ -281,9 +277,9 @@ export default {
           isDeliver: this.editedItem.isDeliver,
           limitTime: this.editedItem.limitTime,
           minCost: this.editedItem.minCost,
-        };         
+        };
         this.axios.post(url, actRow).then((res) => {
-          if (res.data.resultCode == "10") {            
+          if (res.data.resultCode == "10") {
             Object.assign(
               this.$store.state.shopData[this.editedIndex],
               this.editedItem
@@ -294,9 +290,31 @@ export default {
           }
         });
       } else {
-        this.$store.state.shopData.push(this.editedItem);
+        window.console.log(this.editedItem);
+          let url = this.$store.state.api + "C00010/AddShop";
+        let actRow = {          
+          shopName: this.editedItem.shopName,
+          shopTel: this.editedItem.shopTel,
+          shopAddr: this.editedItem.shopAddr,
+          shopStatus: this.editedItem.shopStatus,
+          isDeliver: this.editedItem.isDeliver ,
+          limitTime: this.editedItem.limitTime,
+          minCost: this.editedItem.minCost,
+          statusId: '10',          
+        };
+        window.console.log(actRow)
+        this.axios.post(url, actRow).then((res) => {
+          if (res.data.resultCode == "10") {
+            Object.assign(
+              this.$store.state.shopData.push(this.editedItem)              
+            );
+            this.close();
+          } else {
+            alert(res.data.errMsg);
+          }
+        });
+        
       }
-      
     },
   },
 };

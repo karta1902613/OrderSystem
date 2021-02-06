@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
+using Dapper;
 using System.Linq;
 using System.Threading.Tasks;
+using OrderAPI.Model;
 
 namespace OrderAPI.Tools
 {
@@ -153,6 +155,18 @@ namespace OrderAPI.Tools
             return ja;
         }
     }
+
+    public class Dapper
+    {
+        public static string ExecuteNonQuery(string conStr, string queryStr, DynamicParameters parma)
+        {
+            using (var cn = new SqlConnection(conStr))
+            {                            
+                cn.Execute(queryStr, parma);
+            }
+            return "";
+        }
+    }
     public class System
     {
    
@@ -167,4 +181,5 @@ namespace OrderAPI.Tools
             return config.GetConnectionString(conStrName);
         }
     }
+   
 }
