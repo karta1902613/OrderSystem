@@ -119,19 +119,29 @@
         </v-dialog>
         <v-dialog v-model="dialogDelete" max-width="500px">
           <v-card>
-            <v-card-title class="headline"
-              >Are you sure you want to delete this item?</v-card-title
-            >
+            <v-card-title class="headline">是否刪除?</v-card-title>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="blue darken-1" text @click="closeDelete"
-                >Cancel</v-btn
+                >取消</v-btn
               >
               <v-btn color="blue darken-1" text @click="deleteItemConfirm"
-                >OK</v-btn
+                >確認</v-btn
               >
               <v-spacer></v-spacer>
             </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="dialogLoding" hide-overlay persistent width="300">
+          <v-card color="primary" dark>
+            <v-card-text>
+              Loading...
+              <v-progress-linear
+                indeterminate
+                color="white"
+                class="mb-0"
+              ></v-progress-linear>
+            </v-card-text>
           </v-card>
         </v-dialog>
       </v-toolbar>
@@ -148,6 +158,7 @@ export default {
   data: () => ({
     dialog: false,
     dialogDelete: false,
+    dialogLoding: false,
     shopNameCon: "",
     time: null,
     menu2: false,
@@ -186,6 +197,7 @@ export default {
     dialog(val) {
       val || this.close();
     },
+
     dialogDelete(val) {
       val || this.closeDelete();
     },
@@ -198,6 +210,7 @@ export default {
   methods: {
     initialize() {},
     query() {
+      this.dialogLoding = true;
       //清除store舊資料
       this.$store.state.shopData.splice(0);
       let url = this.$store.state.api + "C00010/QueryShop";
@@ -215,8 +228,10 @@ export default {
 
             //window.console.log(e)
             this.$store.state.shopData.push(e);
+            this.dialogLoding = false;
           });
         } else {
+          this.dialogLoding = false;
           alert(res.data.errMsg);
         }
       });
@@ -226,22 +241,35 @@ export default {
       window.console.log(this.$store.state.shopData.indexOf(item));
       this.editedIndex = this.$store.state.shopData.indexOf(item);
       this.editedItem = Object.assign({}, item);
-      this.selectShopType = {
-        name: this.editedItem.statusName,
-        value: this.editedItem.shopStatus,
-      };
+      (this.editedItem.isDeliver = Boolean(this.editedItem.isDeliver)),
+        (this.selectShopType = {
+          name: this.editedItem.statusName,
+          value: this.editedItem.shopStatus,
+        });
+
       this.dialog = true;
     },
 
     deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
+      this.editedIndex = this.$store.state.shopData.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialogDelete = true;
     },
 
     deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1);
-      this.closeDelete();
+      let url = this.$store.state.api + "C00010/DeleteShop";
+      let actRow = {
+        shopId: this.editedItem.shopId,
+      };
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          this.$store.state.shopData.splice(this.editedIndex, 1);
+          this.closeDelete();
+        } else {
+          alert(res.data.errMsg);
+        }
+        this.dialogLoding = false;
+      });
     },
 
     close() {
@@ -261,6 +289,7 @@ export default {
     },
 
     save() {
+      this.dialogLoding = true;
       this.editedItem.statusName = this.selectShopType.name;
       this.editedItem.shopStatus = this.selectShopType.value;
       this.editedItem.isDeliverName =
@@ -288,32 +317,31 @@ export default {
           } else {
             alert(res.data.errMsg);
           }
+          this.dialogLoding = false;
         });
       } else {
         window.console.log(this.editedItem);
-          let url = this.$store.state.api + "C00010/AddShop";
-        let actRow = {          
+        let url = this.$store.state.api + "C00010/AddShop";
+        let actRow = {
           shopName: this.editedItem.shopName,
           shopTel: this.editedItem.shopTel,
           shopAddr: this.editedItem.shopAddr,
           shopStatus: this.editedItem.shopStatus,
-          isDeliver: this.editedItem.isDeliver ,
+          isDeliver: this.editedItem.isDeliver,
           limitTime: this.editedItem.limitTime,
           minCost: this.editedItem.minCost,
-          statusId: '10',          
+          statusId: "10",
         };
-        window.console.log(actRow)
+        window.console.log(actRow);
         this.axios.post(url, actRow).then((res) => {
           if (res.data.resultCode == "10") {
-            Object.assign(
-              this.$store.state.shopData.push(this.editedItem)              
-            );
+            Object.assign(this.$store.state.shopData.push(this.editedItem));
             this.close();
           } else {
             alert(res.data.errMsg);
           }
+          this.dialogLoding = false;
         });
-        
       }
     },
   },

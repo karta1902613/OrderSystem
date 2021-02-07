@@ -141,5 +141,31 @@ namespace OrderAPI.Controllers.Admin
 
             return Content(JsonConvert.SerializeObject(jo), "application/json");
         }
+
+        public IActionResult DeleteShop(ShopData actRow)
+        {
+            JObject jo = new JObject();            
+            try
+            {
+                actRow.creatUser = "1";//TODO 待之後登入cookie寫好 再來處理
+
+                var param = new DynamicParameters();
+                param.Add("shopId", actRow.shopId);
+                param.Add("statusId", "30");
+                strSql.Clear();
+                strSql.AppendLine("update C10_shop set statusId=@statusId where shopId=@shopId");
+                
+                errStr = Tools.Dapper.ExecuteNonQuery(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                jo.Add("resultCode", resultCode);
+            }
+            catch (Exception ex)
+            {
+                resultCode = "01";
+                jo.Add("resultCode", resultCode);
+                jo.Add("errMsg", ex.Message);
+            }
+
+            return Content(JsonConvert.SerializeObject(jo), "application/json");
+        }
     }
 }
