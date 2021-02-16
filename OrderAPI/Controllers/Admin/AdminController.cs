@@ -1,15 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Data;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using OrderAPI.Model;
+using Dapper;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace OrderAPI.Controllers.Admin
 {
@@ -17,6 +22,8 @@ namespace OrderAPI.Controllers.Admin
     [ApiController]
     public class AdminController : ControllerBase
     {
+        string resultCode = "10";
+        string errStr = "";
         private readonly IConfiguration configuration;
         /*
         [HttpGet]
@@ -28,33 +35,7 @@ namespace OrderAPI.Controllers.Admin
         public AdminController(IConfiguration config)
         {
             this.configuration = config;
-        }
-        [HttpPost]
-        public IActionResult test()
-        {
-            JObject jo = new JObject();
-            jo.Add("TEst", "test");
-            return Content(JsonConvert.SerializeObject(jo), "application/json");            
-        }
-        [HttpPost]
-        public IActionResult test2()
-        {
-            JObject jo = new JObject();
-            
-            string connectionstring = configuration.GetConnectionString("MyDb");
-            DataTable dt = new DataTable();
-            SqlConnection connection = new SqlConnection(connectionstring);
-            connection.Open();
-            SqlCommand com = new SqlCommand("select * from S00_menus", connection);
-            com.CommandText = "select * from S00_menus";
-            SqlDataAdapter da = new SqlDataAdapter(com);
-            da.Fill(dt);
-            connection.Close();
-            JArray ja = new JArray();
-            
-            jo.Add("TEst", "test2");
-            return Content(JsonConvert.SerializeObject(jo), "application/json");
-        }
+        }   
         [HttpGet]
         public IActionResult getMenuTree()
         {
@@ -99,6 +80,100 @@ namespace OrderAPI.Controllers.Admin
             jo.Add("menu", ja);
             //return Ok(jo);
             return Content(JsonConvert.SerializeObject(jo), "application/json");
+        }
+        [HttpGet]
+        public bool IsLogin()
+        {
+            return User.Identity.IsAuthenticated;
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(Login actRow)
+        {
+            JObject jo = new JObject();
+            Login results = null;
+            try
+            {
+                var param = new DynamicParameters();
+                param.Add("userId", actRow.userId);
+                param.Add("userPassword", actRow.userPassword);
+                using (SqlConnection conn = new SqlConnection(Tools.System.getConStr("MyDB")))
+                {
+                    string strSql = "Select * from S10_users where userId = @userId and userPassword=@userPassword";
+                    results = conn.QuerySingleOrDefault<Login>(strSql, param);
+                }
+                if (results == null) throw new Exception("請輸入正確的帳號密碼");
+
+                jo.Add("resultCode", resultCode);
+
+                #region cookie base
+                var claims = new List<Claim>   
+                {                    
+                    new Claim("LoginTime", DateTime.Now.ToString()),
+                    new Claim(ClaimTypes.Name, "Kevin"),
+                    new Claim(ClaimTypes.Email, "karta1902613@gmail.com"),
+                     new Claim(ClaimTypes.Role, "Administrator"),                    
+                };
+
+                var claimsIdentity = new ClaimsIdentity(
+        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // 設定 Authentication
+                var authProperties = new AuthenticationProperties
+                {
+                    AllowRefresh = true,
+                    // Refreshing the authentication session should be allowed.
+
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
+                    // The time at which the authentication ticket expires. A 
+                    // value set here overrides the ExpireTimeSpan option of 
+                    // CookieAuthenticationOptions set with AddCookie.
+
+                    IsPersistent = true,
+                    // Whether the authentication session is persisted across 
+                    // multiple requests. When used with cookies, controls
+                    // whether the cookie's lifetime is absolute (matching the
+                    // lifetime of the authentication ticket) or session-based.
+
+                    //IssuedUtc = <DateTimeOffset>,
+                    // The time at which the authentication ticket was issued.
+
+                    //RedirectUri = <string>
+                    // The full path or absolute URI to be used as an http 
+                    // redirect response value.
+                };
+
+                // 將user登入的資訊寫到session中
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                resultCode = "01";
+                jo.Add("resultCode", resultCode);
+                jo.Add("errMsg", ex.Message);
+            }
+
+
+
+            return Ok("ok");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return Ok("ok");
+        }
+        [HttpGet]
+        [Authorize]
+        public UserInfo GetUserInfo()
+        {
+            var userInfo = new UserInfo(User.Claims.ToList());
+            return userInfo;
         }
     }
 }

@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using Dapper;
 using OrderAPI.Model;
 using System.Data.SqlClient;
+using System.Security.Claims;
 
 namespace OrderAPI.Controllers.Admin
 {    
@@ -23,7 +24,8 @@ namespace OrderAPI.Controllers.Admin
         StringBuilder strSql = new StringBuilder(200);
         [HttpPost]
         public IActionResult QueryShop(QueryShop actRow)
-        {            
+        {
+            var Account = HttpContext.User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.Name).Value;
             JObject jo = new JObject();
             string sqlCon = "where 1 = 1 ";
             try
