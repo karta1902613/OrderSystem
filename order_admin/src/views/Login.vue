@@ -47,7 +47,11 @@
 
 <script>
 export default {
+  created(){
+this.$store.dispatch("IsLogin");
+  },
   data: () => ({
+    test:false,
     drawer: null,
   }),
   methods: {

@@ -111,8 +111,8 @@ export default {
   created() {
     window.console.log("TODO get menuTREE");
     this.$store.dispatch("getMenuTree");
-    this.$store.dispatch("IsLogin");
-    this.$store.dispatch("GetUserInfo");
+    //this.$store.dispatch("IsLogin");
+    //this.$store.dispatch("GetUserInfo");
   },
   data: () => ({
     drawer: null,
