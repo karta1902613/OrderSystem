@@ -96,13 +96,13 @@ namespace OrderAPI.Controllers.Admin
                 var param = new DynamicParameters();
                 param.Add("userId", actRow.userId);
                 param.Add("userPassword", actRow.userPassword);
-                /*
+                
                 using (SqlConnection conn = new SqlConnection(Tools.System.getConStr("MyDB")))
                 {
                     string strSql = "Select * from S10_users where userId = @userId and userPassword=@userPassword";
                     results = conn.QuerySingleOrDefault<Login>(strSql, param);
-                }*/
-                //if (results == null) throw new Exception("請輸入正確的帳號密碼");
+                }
+                if (results == null) throw new Exception("請輸入正確的帳號密碼");
 
                 jo.Add("resultCode", resultCode);
 
