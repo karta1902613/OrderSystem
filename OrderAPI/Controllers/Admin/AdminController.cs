@@ -112,7 +112,8 @@ namespace OrderAPI.Controllers.Admin
                     new Claim("LoginTime", DateTime.Now.ToString()),
                     new Claim(ClaimTypes.Name, "Kevin"),
                     new Claim(ClaimTypes.Email, "karta1902613@gmail.com"),
-                     new Claim(ClaimTypes.Role, "Administrator"),                    
+                     new Claim(ClaimTypes.Role, "Administrator"),
+                     new Claim(ClaimTypes.NameIdentifier, "1"),
                 };
 
                 var claimsIdentity = new ClaimsIdentity(

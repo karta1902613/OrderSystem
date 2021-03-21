@@ -26,8 +26,19 @@
         </v-expansion-panels>
         <v-expansion-panels>
           <v-expansion-panel v-for="(item, orderId) in order" :key="orderId">
-            <v-expansion-panel-header
-              >{{ item.mealName }}*{{ item.mealQuantity }} NT${{
+            <v-expansion-panel-header>
+              <template v-slot:actions>
+                <v-btn
+                  color="primary"
+                  @click.native.stop="btnCheckRemove(item)"
+                  fab
+                  small
+                  dark
+                >
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </template>
+              {{ item.mealName }}*{{ item.mealQuantity }} NT${{
                 item.mealPrice * item.mealQuantity
               }}</v-expansion-panel-header
             >
@@ -42,7 +53,13 @@
     <v-main>
       <v-container>
         <v-row>
-          <v-col v-for="item in this.$store.state.menu" :key="item.mealsId" sm="24" md="4" lg="2">
+          <v-col
+            v-for="item in this.$store.state.menu"
+            :key="item.mealsId"
+            sm="24"
+            md="4"
+            lg="2"
+          >
             <v-card class="mx-auto" max-width="344" outlined>
               <v-list-item three-line>
                 <v-list-item-content>
@@ -124,7 +141,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+    <v-dialog v-model="dialogDelete" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">是否刪除?</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="closeDelete">取消</v-btn>
+          <v-btn color="blue darken-1" text @click="btnRemoveOrder">確認</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-alert v-show="alertFlag" outlined text type="success"
       >成功加入訂單</v-alert
     >
@@ -133,14 +160,14 @@
 
 <script>
 export default {
-  created(){
-    let url = this.$store.state.api + 'Order/GetOrderData';
-    this.axios.get(url).then((res)=>{
-      window.console.log(res.data)
-       res.data.forEach(e => {
-          this.$store.state.menu.push(e);
-       });
-    })
+  created() {
+    let url = this.$store.state.api + "Order/GetOrderData";
+    this.axios.get(url).then((res) => {
+      window.console.log(res.data);
+      res.data.forEach((e) => {
+        this.$store.state.menu.push(e);
+      });
+    });
   },
   data() {
     return {
@@ -151,53 +178,17 @@ export default {
       money: 0,
       drawer: null,
       dialog: false,
+      dialogDelete: false,
       tempItem: {},
-      menu: [
-        {
-          type: "主食",
-          mealsId: 1,
-          mealsName: "古早味乾麵",
-          mealsPrice: "45",
-        },
-        {
-          type: "主食",
-          mealsId: 2,
-          mealsName: "麻醬乾麵",
-          mealsPrice: 45,
-        },
-        {
-          type: "主食",
-          mealsId: 3,
-          mealsName: "紹辣乾麵",
-          mealsPrice: 49,
-        },
-        {
-          type: "湯品",
-          mealsId: 4,
-          mealsName: "酸辣湯",
-          mealsPrice: 30,
-        },
-        {
-          type: "湯品",
-          mealsId: 5,
-          mealsName: "玉米濃湯",
-          mealsPrice: 30,
-        },
-        {
-          type: "湯品",
-          mealsId: 7,
-          mealsName: "蕈菇湯",
-          mealsPrice: 30,
-        },
-        {
-          type: "湯品",
-          mealsId: 8,
-          mealsName: "旗魚花枝丸湯",
-          mealsPrice: 30,
-        },
-      ],
+      rmItem: {},
+      menu: [],
       order: [],
     };
+  },
+  watch: {
+    dialogDelete(val) {
+      val || this.closeDelete();
+    },
   },
   methods: {
     logout() {
@@ -236,25 +227,62 @@ export default {
       this.money = this.count * this.tempItem.mealPrice;
     },
     btnAddOrder() {
-      this.tempItem.mealsPriceSum =
-        this.tempItem.mealPrice * this.tempItem.mealQuantity;
-      this.sumMoney += this.tempItem.mealsPriceSum;
-      this.dialog = false;
-      this.tempItem.orderId = this.orderId;
-      this.order.push({
+      let url = this.$store.state.api + "Order/ActOrderDetail";
+      let actRow = {
         orderId: this.orderId,
-        menuId: this.tempItem.menuId,
-        mealName: this.tempItem.mealName,
-        mealQuantity: this.tempItem.mealQuantity,
+        shopId: this.tempItem.shopId,
+        mealId: this.tempItem.mealId,
         mealPrice: this.tempItem.mealPrice,
-        mealsPriceSum: this.tempItem.mealPriceSum,
-        Memo: this.tempItem.Memo,
+        mealQuantity: this.tempItem.mealQuantity,
+        statusId1: "10",
+      };
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          this.tempItem.mealsPriceSum =
+            this.tempItem.mealPrice * this.tempItem.mealQuantity;
+          this.sumMoney += this.tempItem.mealsPriceSum;
+          this.dialog = false;
+          this.tempItem.orderId = this.orderId;
+          this.order.push({
+            orderId: this.orderId,
+            menuId: this.tempItem.menuId,
+            mealName: this.tempItem.mealName,
+            mealQuantity: this.tempItem.mealQuantity,
+            mealPrice: this.tempItem.mealPrice,
+            mealsPriceSum: this.tempItem.mealPriceSum,
+            Memo: this.tempItem.Memo,
+          });
+          this.orderId++;
+          this.alertFlag = true;
+          var timeoutID = window.setTimeout(
+            () => (this.alertFlag = false),
+            1337
+          );
+          this.closeDelete();
+        } else {
+          alert(res.data.errMsg);
+        }
       });
-      this.orderId++;
-      this.alertFlag = true;
-      var timeoutID = window.setTimeout(() => (this.alertFlag = false), 1337);
+      window.console.log(actRow);
+    },
+    btnCheckRemove(item) {
+      this.dialogDelete = true;
+      this.rmItem = item;
+      console.log(this.rmItem);
+    },
+    btnRemoveOrder() {
+      window.console.log(this.rmItem);
+      let orderId = this.rmItem.orderId;
+      this.order = this.order.filter(function (obj) {
+        return obj.orderId !== orderId;
+      });
+
+      this.sumMoney -= this.rmItem.mealPrice * this.rmItem.mealQuantity;
+      this.dialogDelete = false;
+    },
+    closeDelete() {
+      this.dialogDelete = false;
     },
   },
-  
 };
 </script>

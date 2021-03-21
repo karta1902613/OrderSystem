@@ -26,6 +26,15 @@ namespace OrderAPI.Model
         public DateTime actTime { get; set; }
         public string creatUser { get; set; }
         public DateTime creatTime { get; set; }
-    }    
+    }
+    public class orderDetail
+    {
+        public object orderId { get; set; }
+        public object shopId { get; set; }
+        public object mealId { get; set; }
+        public object mealPrice { get; set; }
+        public object mealQuantity { get; set; }        
+        public string statusId1 { get; set; }//10正常 20 Pass
+    }
 
 }
