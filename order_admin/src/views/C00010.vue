@@ -211,7 +211,7 @@ export default {
     initialize() {},
     query() {
       this.dialogLoding = true;
-      //清除store舊資料
+      //清除store舊資料1
       this.$store.state.shopData.splice(0);
       let url = this.$store.state.api + "C00010/QueryShop";
       let actRow = {

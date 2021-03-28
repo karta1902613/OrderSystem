@@ -46,11 +46,21 @@ namespace OrderAPI.Controllers.Order
                     strSql += "from C20_shopMenu t ";
                     strSql += "inner join S00_statusId t1 on t.statusId1 = t1.statusId and t.statusType1 = t1.statusType ";
                     strSql += "where t.statusId = 10 and t.shopId = " + query.shopId;
-                    var queryMenu = conn.Query(strSql);
-                    json = JsonConvert.SerializeObject(queryMenu);
+                    //var queryMenu = conn.Query(strSql);
+                    //json = JsonConvert.SerializeObject(queryMenu);
+                    JArray menu = JArray.Parse(Tools.Dapper.QueryDataToJson(Tools.System.getConStr("MyDB"),strSql));    
+                    strSql  = "select t.rowId,t.orderId,orderPrice,t.shopId,t.mealId,t.mealPrice,t.mealQuantity,t.memo,t1.mealName";
+                    strSql += " from C30_orderDetail t ";
+                    strSql += " left join C20_shopMenu t1 on t.shopId = t1.shopId and t.mealId = t1.mealId ";
+                    strSql += "where t.creatUser = '" + HttpContext.User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.NameIdentifier).Value + "' and t.orderId = '" + query.orderId + "' and t.statusId = '10'";
+
+                    JArray orderDetail = JArray.Parse(Tools.Dapper.QueryDataToJson(Tools.System.getConStr("MyDB"), strSql));
                     query.Dump();                
-                    jo.Add("menu", json);
+                    jo.Add("menu", menu);
+                    jo.Add("orderDetail", orderDetail);
+                    
                 }
+
             }
             catch(Exception ex)
             {
@@ -59,7 +69,7 @@ namespace OrderAPI.Controllers.Order
                 jo.Add("errMsg", ex.Message);
             }
           
-            return Content(json, "application/json");
+            return Content(JsonConvert.SerializeObject(jo), "application/json");
         }
         [HttpPost]
         public IActionResult ActOrderDetail(orderDetail actRow)
@@ -83,12 +93,44 @@ namespace OrderAPI.Controllers.Order
                 param.Add("statusId", "10");
                 param.Add("statusId1", actRow.statusId1.ToString());
                 param.Add("statusType1", "C3");
+                param.Add("memo", actRow.memo.ToString());
                 param.Add("creatUser", HttpContext.User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.NameIdentifier).Value);
                 param.Add("creatTime", DateTime.Now);
                 strSql.Clear();
-                strSql.AppendLine("insert into C30_orderDetail (orderId,shopId,mealId,orderPrice,mealPrice,mealQuantity,sysUserId,statusId,stausType,statusId1,statusType1,creatUser,creatTime)");
-                strSql.AppendLine("VALUES (@orderId,@shopId,@mealId,@orderPrice,@mealPrice,@mealQuantity,@sysUserId,@statusId,@stausType,@statusId1,@statusType1,@creatUser,@creatTime)");
+                strSql.AppendLine("insert into C30_orderDetail (orderId,shopId,mealId,orderPrice,mealPrice,mealQuantity,sysUserId,statusId,stausType,statusId1,statusType1,memo,creatUser,creatTime)");
+                strSql.AppendLine("VALUES (@orderId,@shopId,@mealId,@orderPrice,@mealPrice,@mealQuantity,@sysUserId,@statusId,@stausType,@statusId1,@statusType1,@memo,@creatUser,@creatTime) ");
+                strSql.AppendLine("SELECT CAST(SCOPE_IDENTITY() as int) as rowId");
+                var rowId = Tools.Dapper.QuerySingleOrDefault(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                //errStr = Tools.Dapper.ExecuteNonQuery(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                jo.Add("rowId",rowId);
+                jo.Add("resultCode", resultCode);
+            }
+            catch(Exception ex)
+            {
+                resultCode = "01";
+                jo.Add("resultCode", resultCode);
+                jo.Add("errMsg", ex.Message);
+            }
+            return Content(JsonConvert.SerializeObject(jo), "application/json");
+        }
+        [HttpPost]
+        public IActionResult DeleteOrderDetail(orderDetail actRow)
+        {
+            var identity = (ClaimsIdentity)User.Identity;
+            IEnumerable<Claim> claims = identity.Claims;
+            JObject jo = new JObject();
+            try
+            {
+                var param = new DynamicParameters();
+                param.Add("rowId", actRow.rowId.ToString());
+                param.Add("statusId", "30");
+                param.Add("sysUserId", HttpContext.User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.NameIdentifier).Value);
+                param.Add("actUser", HttpContext.User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.NameIdentifier).Value);
+                strSql.Clear();
+                strSql.AppendLine("update C30_orderDetail set statusId=@statusId,actUser=@actUser,actTime=getDate() where rowId=@rowId and sysUserId = @sysUserId");
+
                 errStr = Tools.Dapper.ExecuteNonQuery(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                if (errStr != "") throw new Exception(errStr);
                 jo.Add("resultCode", resultCode);
             }
             catch(Exception ex)

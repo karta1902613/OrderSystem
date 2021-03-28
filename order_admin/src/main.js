@@ -6,7 +6,6 @@ import qs from 'qs'
 import vuetify from "./plugins/vuetify";
 import axios from "axios";
 import VueAxios from "vue-axios";
-
 // 全局使用 axios
 axios.defaults.withCredentials = true;
 Vue.use(VueAxios, axios);

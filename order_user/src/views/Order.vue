@@ -25,7 +25,7 @@
           </v-expansion-panel>
         </v-expansion-panels>
         <v-expansion-panels>
-          <v-expansion-panel v-for="(item, orderId) in order" :key="orderId">
+          <v-expansion-panel v-for="(item, rowId) in order" :key="rowId">
             <v-expansion-panel-header>
               <template v-slot:actions>
                 <v-btn
@@ -155,30 +155,52 @@
     <v-alert v-show="alertFlag" outlined text type="success"
       >成功加入訂單</v-alert
     >
+    <v-dialog v-model="dialogLoding" hide-overlay persistent width="300">
+      <v-card color="primary" dark>
+        <v-card-text>
+          Loading...
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
 <script>
 export default {
   created() {
+    this.dialogLoding = true;
     let url = this.$store.state.api + "Order/GetOrderData";
     this.axios.get(url).then((res) => {
+      this.dialogLoding = false;
       window.console.log(res.data);
-      res.data.forEach((e) => {
+      this.orderId = res.data.orderId;
+      this.$store.state.menu.splice(0);
+      this.order.splice(0);
+      res.data.menu.forEach((e) => {
         this.$store.state.menu.push(e);
+      });
+      res.data.orderDetail.forEach((e) => {
+        this.order.push(e);
+        this.sumMoney += e.orderPrice;
       });
     });
   },
   data() {
     return {
       alertFlag: false,
-      orderId: 0,
+      orderId: null,
       count: 1,
       sumMoney: 0,
       money: 0,
       drawer: null,
       dialog: false,
       dialogDelete: false,
+      dialogLoding: false,
       tempItem: {},
       rmItem: {},
       menu: [],
@@ -234,9 +256,13 @@ export default {
         mealId: this.tempItem.mealId,
         mealPrice: this.tempItem.mealPrice,
         mealQuantity: this.tempItem.mealQuantity,
+        memo: this.tempItem.Memo,
         statusId1: "10",
       };
+      window.console.log(actRow);
+      this.dialogLoding = true;
       this.axios.post(url, actRow).then((res) => {
+        this.dialogLoding = false;
         if (res.data.resultCode == "10") {
           this.tempItem.mealsPriceSum =
             this.tempItem.mealPrice * this.tempItem.mealQuantity;
@@ -244,6 +270,7 @@ export default {
           this.dialog = false;
           this.tempItem.orderId = this.orderId;
           this.order.push({
+            rowId: res.data.rowId,
             orderId: this.orderId,
             menuId: this.tempItem.menuId,
             mealName: this.tempItem.mealName,
@@ -272,13 +299,26 @@ export default {
     },
     btnRemoveOrder() {
       window.console.log(this.rmItem);
-      let orderId = this.rmItem.orderId;
-      this.order = this.order.filter(function (obj) {
-        return obj.orderId !== orderId;
-      });
+      let url = this.$store.state.api + "Order/DeleteOrderDetail";
+      let rowId = this.rmItem.rowId;
+      let actRow = {
+        rowId: this.rmItem.rowId,
+      };
 
-      this.sumMoney -= this.rmItem.mealPrice * this.rmItem.mealQuantity;
-      this.dialogDelete = false;
+      this.axios.post(url, actRow).then((res) => {
+        window.console.log(res);
+        if (res.data.resultCode === "10") {
+          this.order = this.order.filter(function (obj) {
+            return obj.rowId !== rowId;
+          });
+
+          this.sumMoney -= this.rmItem.mealPrice * this.rmItem.mealQuantity;
+        } else {
+          alert(res.data.errMsg);
+        }
+        this.dialogDelete = false;
+        this.dialogLoding = false;
+      });
     },
     closeDelete() {
       this.dialogDelete = false;

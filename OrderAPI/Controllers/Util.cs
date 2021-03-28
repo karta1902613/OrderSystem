@@ -9,6 +9,7 @@ using Dapper;
 using System.Linq;
 using System.Threading.Tasks;
 using OrderAPI.Model;
+using Newtonsoft.Json;
 
 namespace OrderAPI.Tools
 {
@@ -166,7 +167,37 @@ namespace OrderAPI.Tools
             }
             return "";
         }
-
+        public static string QueryDataToJson(string conStr,string queryStr)
+        {
+            var json = "";
+            using (SqlConnection conn = new SqlConnection(conStr))
+            {
+                var queryResult = conn.Query(queryStr);
+                json = JsonConvert.SerializeObject(queryResult);                
+            }
+            return json;
+        }
+        public static string QueryFirstOrDefault(string conStr,string queryStr)
+        {            
+            using (SqlConnection conn = new SqlConnection(conStr))
+            {                               
+                var query = conn.Query(queryStr).FirstOrDefault();                                
+                query.Dump();
+                return query;
+            }
+        }
+        public static string QuerySingleOrDefault(string conStr, string queryStr, DynamicParameters param)
+        {
+            //var id = "";
+            using (SqlConnection conn = new SqlConnection(conStr))
+            {
+                var query = conn.QuerySingleOrDefault(queryStr.ToString(), param);
+                String id = query.rowId.ToString();
+                query.Dump();
+                return id;
+            }
+            
+        }
     }
     public class System
     {
