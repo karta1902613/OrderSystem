@@ -38,5 +38,14 @@ namespace OrderAPI.Model
         public object memo { get; set; }        
         public string statusId1 { get; set; }//10正常 20 Pass
     }
+    public class order
+    {
+        public object orderId { get; set; }
+        public object orderName { get; set; }
+        public object shopId { get; set; }
+        public object isLimit { get; set; }
+        public object limitTime { get; set; }
+        public object memo { get; set; }
+    }
 
 }

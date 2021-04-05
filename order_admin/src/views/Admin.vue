@@ -92,8 +92,7 @@
     </v-app-bar>
 
     <!-- Sizes your content based upon application components -->
-    <v-main>
-      <!-- Provides the application the proper gutter -->
+    <v-main class="pt-2 pt-sm-2 pt-xs-2 pt-md-0 pt-lg-0 pt-xl-0">
       <v-container fluid>
         <!-- {{this.$store.state.menuTree}} -->
         <!-- If using vue-router -->
@@ -101,15 +100,14 @@
       </v-container>
     </v-main>
 
-    <v-footer app>
-      <!-- -->
-    </v-footer>
+    <!-- <v-footer app>
+      
+    </v-footer> -->
   </v-app>
 </template>
 <script>
 export default {
-  created() {
-    window.console.log("TODO get menuTREE");
+  created() {    
     this.$store.dispatch("getMenuTree");
     //this.$store.dispatch("IsLogin");
     //this.$store.dispatch("GetUserInfo");
@@ -161,5 +159,8 @@ export default {
   padding-top: 4px !important;
   padding-bottom: 4px !important;
   font-size: 24px;
+}
+.v-application--wrap {
+  min-height: calc(100vh - 60px) !important;
 }
 </style>

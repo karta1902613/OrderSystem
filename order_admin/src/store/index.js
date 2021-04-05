@@ -9,6 +9,9 @@ export default new Vuex.Store({
     state: {
         menuTree: [],
         shopData: [],
+        orderList: [],
+        order: {},
+        orderStepPage: 1,
         api: "https://localhost:44362/api/",
         isAuthenticated: false,
         claims: {},
