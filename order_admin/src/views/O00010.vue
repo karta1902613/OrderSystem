@@ -480,13 +480,15 @@ export default {
       this.$store.state.order.shopId = this.slides[index].shopId;
     },
     pickOut() {
+      window.console.log(this);
       // window.console.log(this.$refs.mycarousel)
       this.$refs.mycarousel.goSlide(
         Math.floor(Math.random() * this.slides.length)
       );
     },
     addOrderDetail() {
-      
+      this.$store.state.orderStepPage = 3;
+      /*
         let url = this.$store.state.api + "O00010/ActOrder";
       
       this.axios.post(url, this.$store.state.order).then((res) => {
@@ -497,10 +499,11 @@ export default {
           alert(res.data.errMsg);
         }
       });
+      */
     },
-    chooseOrder() {      
+    chooseOrder() {
       this.$store.state.orderStepPage = 2;
-      if (this.$store.state.order.orderId === "-1") {        
+      if (this.$store.state.order.orderId === "-1") {
         var today = new Date();
         this.$store.state.order.orderName =
           today.getFullYear() +
@@ -522,15 +525,17 @@ export default {
   },
   watch: {
     "$store.state.orderStepPage": function () {
-      window.console.log(this.$store.state.orderStepPage);
       switch (this.$store.state.orderStepPage) {
         case 1:
           break;
         case 2:
-          window.console.log(this.$refs.mycarousel)
-          if(this.$store.state.order.orderId !== '-1' ){
-            //window.console.log('todo get shop orderdetail')
-          }
+          this.$nextTick(() => {
+            this.$refs.mycarousel.goSlide(this.currentImgIndex);
+          });
+          // this.slides.findIndex(isLargeNumber)          
+          // if(this.$store.state.order.orderId !== '-1' ){
+          //   window.console.log('todo get shop orderdetail')
+          // }
           break;
         case 3:
           break;
