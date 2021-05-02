@@ -1,19 +1,19 @@
 
 <template>
-  <v-stepper v-model="$store.state.orderStepPage">
+  <v-stepper v-model="orderStepPage">
     <v-stepper-header>
-      <v-stepper-step :complete="$store.state.orderStepPage > 1" step="1">
+      <v-stepper-step :complete="orderStepPage > 1" step="1">
         選擇訂單
       </v-stepper-step>
 
       <v-divider></v-divider>
 
-      <v-stepper-step :complete="$store.state.orderStepPage > 2" step="2">
+      <v-stepper-step :complete="orderStepPage > 2" step="2">
         訂單建立
       </v-stepper-step>
 
       <v-divider></v-divider>
-      <v-stepper-step :complete="$store.state.orderStepPage > 3" step="3">
+      <v-stepper-step :complete="orderStepPage > 3" step="3">
         訂單明細
       </v-stepper-step>
 
@@ -41,7 +41,7 @@
       </v-stepper-content>
 
       <v-stepper-content step="2">
-        <div class="box" v-if="$store.state.orderStepPage == 2">
+        <div class="box" v-if="orderStepPage == 2">
           <carousel-3d
             ref="mycarousel"
             :on-slide-change="onSlideChanged"
@@ -143,6 +143,7 @@
             <v-data-table
               :headers="headers"
               :items="orderDetail"
+              :items-per-page="-1"
               hide-default-footer
               class="elevation-1"
             ></v-data-table
@@ -150,9 +151,13 @@
           <v-col cols="12" sm="12" md="3">
             <v-card class="mx-auto" max-width="500">
               <v-toolbar color="deep-purple accent-4" dark>
+                <v-btn @click="refreshData()" icon color="green">
+                  <v-icon>mdi-cached</v-icon>
+                </v-btn>
                 <v-toolbar-title>{{ orderDetailInfoType }}</v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-spacer></v-spacer>
+
                 <v-switch
                   v-model="infoType"
                   inset
@@ -163,7 +168,10 @@
               <v-list subheader v-if="infoType">
                 <v-subheader>尚未訂餐</v-subheader>
 
-                <v-list-item v-for="chat in recent" :key="chat.title">
+                <v-list-item
+                  v-for="chat in notYetOrderedUser"
+                  :key="chat.title"
+                >
                   <v-list-item-avatar>
                     <v-avatar
                       :color="chat.mycolor"
@@ -185,43 +193,55 @@
                   <v-list-item-content>
                     <v-list-item-title>店家名稱</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>八方雲集</v-list-item-content>
+                  <v-list-item-content>{{
+                    shopInfo.shopName
+                  }}</v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>店家地址</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>台中市沙鹿區</v-list-item-content>
+                  <v-list-item-content>{{
+                    shopInfo.shopAddr
+                  }}</v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>店家電話</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>04-26360636</v-list-item-content>
+                  <v-list-item-content>{{
+                    shopInfo.shopTel
+                  }}</v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>訂餐時間</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>11:00</v-list-item-content>
+                  <v-list-item-content>{{
+                    shopInfo.limitTime
+                  }}</v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>是否外送</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>是</v-list-item-content>
+                  <v-list-item-content>{{
+                    shopInfo.isDeliver
+                  }}</v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>最低消費</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>400</v-list-item-content>
+                  <v-list-item-content>{{
+                    shopInfo.minCost
+                  }}</v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>訂單總額</v-list-item-title>
                   </v-list-item-content>
-                  <v-list-item-content>410</v-list-item-content>
+                  <v-list-item-content>{{ orderSum }}</v-list-item-content>
                 </v-list-item>
               </v-list>
 
@@ -268,11 +288,7 @@
       <v-stepper-content step="4">
         <v-card class="mb-12" color="grey lighten-1" height="200px"></v-card>
 
-        <v-btn color="primary" @click="$store.state.orderStepPage = 4">
-          Continue
-        </v-btn>
-
-        <v-btn text> Cancel </v-btn>
+        <v-btn color="primary" @click="backHome()"> 回首頁 </v-btn>
       </v-stepper-content>
     </v-stepper-items>
     <v-row justify="center">
@@ -293,8 +309,9 @@
       </v-dialog>
     </v-row>
     {{ this.$store.state.orderStepPage }}
-    {{ slides[currentImgIndex].shopId }}
+
     {{ this.$store.state.order }}
+    {{ this.notYetOrderedUser }}
   </v-stepper>
 </template>
 <script>
@@ -305,50 +322,16 @@ export default {
       dialog: false,
       menu2: false,
       infoType: true,
-
-      slides: [
-        {
-          shopId: "1",
-          title: "八方雲集",
-          src: "https://images.1111.com.tw/news/news103618.jpg",
-        },
-        {
-          shopId: "2",
-          title: "來碗拉麵",
-          src:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUMASJzSXrxLE_bF63Fxv4mtj29KpRfDyAsw&usqp=CAU",
-        },
-        {
-          shopId: "3",
-          title: "小原草魚湯",
-          src:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwTqn1ODDo1F9mufocVIyn3DNn-omZzTMkohqz-0L2nPL9OvBv8mmjVMPPxoorC40SDgA&usqp=CAU",
-        },
-        {
-          shopId: "6",
-          title: "十勝嵐",
-          src:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwTqn1ODDo1F9mufocVIyn3DNn-omZzTMkohqz-0L2nPL9OvBv8mmjVMPPxoorC40SDgA&usqp=CAU",
-        },
-        {
-          shopId: "4",
-          title: "羊肉羹魷魚羹",
-          src:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwTqn1ODDo1F9mufocVIyn3DNn-omZzTMkohqz-0L2nPL9OvBv8mmjVMPPxoorC40SDgA&usqp=CAU",
-        },
-        {
-          shopId: "5",
-          title: "焢肉堯",
-          src:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwTqn1ODDo1F9mufocVIyn3DNn-omZzTMkohqz-0L2nPL9OvBv8mmjVMPPxoorC40SDgA&usqp=CAU",
-        },
-      ],
+      order: {},
+      slides: [],
+      shopInfo: {},
+      orderSum: 0,
       currentImgIndex: 0,
       headers: [
         {
           text: "訂購人",
           align: "start",
-          value: "name",
+          value: "userName",
         },
         { text: "餐點", value: "mealName" },
         { text: "數量", value: "mealQuantity" },
@@ -356,97 +339,9 @@ export default {
         { text: "價格", value: "mealPrice" },
         { text: "備註", value: "memo" },
       ],
-      orderDetail: [
-        {
-          name: "kev!n",
-          mealName: "韭菜鍋貼",
-          mealPrice: 5.5,
-          orderPrice: 55,
-          mealQuantity: 10,
-          memo: "",
-        },
-        {
-          name: "kev!n",
-          mealName: "貢丸湯",
-          mealPrice: 25,
-          mealQuantity: 1,
-          memo: "",
-        },
-        {
-          name: "peter",
-          mealName: "韭菜水餃",
-          mealPrice: 5.5,
-          orderPrice: 66,
-          mealQuantity: 12,
-          memo: "",
-        },
-        {
-          name: "tobin",
-          mealName: "韭菜水餃",
-          mealPrice: 5.5,
-          orderPrice: 66,
-          mealQuantity: 12,
-          memo: "",
-        },
-        {
-          name: "Patty",
-          mealName: "韭菜水餃",
-          mealPrice: 5.5,
-          orderPrice: 66,
-          mealQuantity: 12,
-          memo: "",
-        },
-        {
-          name: "wayne",
-          mealName: "韭菜水餃",
-          mealPrice: 5.5,
-          orderPrice: 66,
-          mealQuantity: 12,
-          memo: "",
-        },
-        {
-          name: "amy",
-          mealName: "韭菜水餃",
-          mealPrice: 5.5,
-          orderPrice: 66,
-          mealQuantity: 12,
-          memo: "",
-        },
-      ],
-      recent: [
-        {
-          avatar: "Iren",
-          title: "Iren",
-          mycolor: "#" + ((Math.random() * 0xffffff) << 0).toString(16),
-        },
-
-        {
-          avatar: "Sylvia",
-          title: "Sylvia",
-          reason: "",
-          mycolor: "#" + ((Math.random() * 0xffffff) << 0).toString(16),
-        },
-      ],
-      passUser: [
-        {
-          title: "Fay",
-          avatar: "Fay",
-          reason: "預設",
-          mycolor: "#" + ((Math.random() * 0xffffff) << 0).toString(16),
-        },
-        {
-          avatar: "B",
-          title: "Blackie",
-          reason: "預設",
-          mycolor: "#" + ((Math.random() * 0xffffff) << 0).toString(16),
-        },
-        {
-          avatar: "Cindy",
-          title: "Cindy",
-          reason: "手動",
-          mycolor: "#" + ((Math.random() * 0xffffff) << 0).toString(16),
-        },
-      ],
+      orderDetail: [],
+      notYetOrderedUser: [],
+      passUser: [],
     };
   },
   created() {
@@ -462,6 +357,18 @@ export default {
         res.data.order.forEach((e) => {
           this.$store.state.orderList.push(e);
         });
+      } else {
+        alert(res.data.errMsg);
+      }
+      this.dialogLoding = false;
+    });
+    url = this.$store.state.api + "O00010/GetShopList";
+    this.axios.get(url).then((res) => {
+      window.console.log(res);
+
+      if (res.data.resultCode == "10") {
+        this.slides = res.data.slides;
+        console.log(res.data);
       } else {
         alert(res.data.errMsg);
       }
@@ -487,19 +394,43 @@ export default {
       );
     },
     addOrderDetail() {
-      this.$store.state.orderStepPage = 3;
-      /*
-        let url = this.$store.state.api + "O00010/ActOrder";
-      
-      this.axios.post(url, this.$store.state.order).then((res) => {
-        if (res.data.resultCode == "10") {    
-          this.$store.state.orderStepPage = 3;     
-          console.log(123)
-        } else {          
+      //this.$store.state.orderStepPage = 3;
+      let today = new Date();
+      let tmpM = "0" + (today.getMonth() + 1);
+      let tmpD = "0" + today.getDate();
+      let formatted =
+        today.getFullYear() + "-" + tmpM.substr(-2) + "-" + tmpD.substr(-2);
+      let url = this.$store.state.api + "O00010/ActOrder";
+      console.log(this.$store.state.order);
+      let actRow = {
+        orderId: this.$store.state.order.orderId,
+        orderName: this.$store.state.order.orderName,
+        shopId: this.$store.state.order.shopId,
+        isLimit:
+          this.$store.state.order.isLimit == undefined
+            ? false
+            : this.$store.state.order.isLimit,
+        limitTime:
+          this.$store.state.order.limitTime == undefined
+            ? null
+            : formatted + "T" + this.$store.state.order.limitTime + ":00",
+        memo:
+          this.$store.state.order.memo == undefined
+            ? null
+            : this.$store.state.order.memo,
+      };
+      window.console.log(actRow);
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          console.log(res.data);
+          if (res.data.orderId != undefined) {
+            this.$store.state.order.orderId = res.data.orderId;
+          }
+          this.$store.state.orderStepPage = 3;
+        } else {
           alert(res.data.errMsg);
         }
       });
-      */
     },
     chooseOrder() {
       this.$store.state.orderStepPage = 2;
@@ -512,6 +443,30 @@ export default {
           "-" +
           today.getDate() +
           "當日午餐";
+      } else {
+        if (
+          this.$store.state.orderList[this.$store.state.order.orderId]
+            .limitTime != null
+        ) {
+          let unixTimeZero = Date.parse(
+            this.$store.state.orderList[this.$store.state.order.orderId]
+              .limitTime
+          );
+          console.log(unixTimeZero);
+          let tmpdate = new Date(unixTimeZero);
+          let tmpH = "0" + tmpdate.getHours();
+          let tmpM = "0" + tmpdate.getMinutes();
+          let formatted = tmpH + ":" + tmpM.substr(-2);
+          this.$store.state.orderList[
+            this.$store.state.order.orderId
+          ].limitTime = formatted;
+        }
+
+        this.$store.state.order = this.$store.state.orderList[
+          this.$store.state.order.orderId
+        ];
+        window.console.log(this.order);
+        //this.$store.state.order = this.order
       }
     },
     orderEnd() {
@@ -519,31 +474,112 @@ export default {
     },
     orderCheckEnd() {
       //TODO post act order end
-      this.dialog = false;
-      this.$store.state.orderStepPage = 4;
+      let actRow = {
+        orderId: this.$store.state.order.orderId,
+      };
+      let url = this.$store.state.api + "O00010/OrderCheckEnd";
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          this.dialog = false;
+          this.$store.state.orderStepPage = 4;
+        } else {
+          alert(res.data.errMsg);
+        }
+      });
     },
-  },
-  watch: {
-    "$store.state.orderStepPage": function () {
-      switch (this.$store.state.orderStepPage) {
-        case 1:
-          break;
-        case 2:
-          this.$nextTick(() => {
-            this.$refs.mycarousel.goSlide(this.currentImgIndex);
+    getOrderDetail() {
+      let actRow = {
+        orderId: this.$store.state.order.orderId,
+        statusId1: "10",
+      };
+      let url = this.$store.state.api + "O00010/GetOrderDetail";
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          let orderSum = 0;
+          res.data.orderDetail.forEach((e) => {
+            orderSum += e.orderPrice;
           });
-          // this.slides.findIndex(isLargeNumber)          
-          // if(this.$store.state.order.orderId !== '-1' ){
-          //   window.console.log('todo get shop orderdetail')
-          // }
-          break;
-        case 3:
-          break;
-        case 4:
-          break;
-      }
+          this.orderSum = orderSum;
+          this.orderDetail = res.data.orderDetail;
+        } else {
+          alert(res.data.errMsg);
+        }
+      });
+    },
+    getNotYetOrderedUser() {
+      let actRow = {
+        orderId: this.$store.state.order.orderId,
+      };
+      let url = this.$store.state.api + "O00010/GetNotYetOrderedUser";
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          this.notYetOrderedUser = [];
+          window.console.log(res.data.NotYetOrderedUser);
+          res.data.NotYetOrderedUser.forEach((e) => {
+            e.avatar = e.title.substr(0, 1).toUpperCase();
+            e.mycolor = "#" + ((Math.random() * 0xffffff) << 0).toString(16);
+            this.notYetOrderedUser.push(e);
+          });
+
+          window.console.log(res.data.notYetOrderedUser);
+          window.console.log(this.notYetOrderedUser);
+        } else {
+          alert(res.data.errMsg);
+        }
+      });
+    },
+    getPassUser() {
+      let actRow = {
+        orderId: this.$store.state.order.orderId,
+        statusId1: "20",
+      };
+      let url = this.$store.state.api + "O00010/GetOrderDetail";
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          this.passUser = [];
+          window.console.log(res.data.orderDetail);
+          res.data.orderDetail.forEach((e) => {
+            e.title = e.userName;
+            e.avatar = e.userName.substr(0, 1).toUpperCase();
+            e.mycolor = "#" + ((Math.random() * 0xffffff) << 0).toString(16);
+            this.passUser.push(e);
+          });
+        } else {
+          alert(res.data.errMsg);
+        }
+      });
+    },
+    getShopDetail() {
+      let actRow = {
+        shopId: this.$store.state.order.shopId,
+      };
+      window.console.log(actRow);
+      let url = this.$store.state.api + "O00010/GetShopDetail";
+      this.axios.post(url, actRow).then((res) => {
+        if (res.data.resultCode == "10") {
+          window.console.log(res.data);
+          res.data.ShopDetail[0].limitTime == null
+            ? ""
+            : res.data.ShopDetail[0];
+          res.data.ShopDetail[0].isDeliver == true ? "是" : "否";
+          this.shopInfo = res.data.ShopDetail[0];
+        } else {
+          alert(res.data.errMsg);
+        }
+      });
+    },
+    backHome() {
+      this.$store.state.orderStepPage = 1;
+      this.$router.push({ name: "Admin" });
+    },
+    refreshData() {
+      this.getOrderDetail();
+      this.getNotYetOrderedUser();
+      this.getPassUser();
+      this.getShopDetail();
     },
   },
+
   computed: {
     orderDetailInfoType: function () {
       if (this.infoType) {
@@ -551,6 +587,33 @@ export default {
       } else {
         return "店家資訊";
       }
+    },
+    orderStepPage: function () {
+      switch (this.$store.state.orderStepPage) {
+        case 1:
+          break;
+        case 2:
+          this.$nextTick(() => {
+            this.$refs.mycarousel.goSlide(this.currentImgIndex);
+            console.log(this.$store.state.order.orderId);
+            //this.$store.state.order.orderName = this.$store.state.orderList[this.$store.state.order.orderId].text
+          });
+
+          // this.slides.findIndex(isLargeNumber)
+          // if(this.$store.state.order.orderId !== '-1' ){
+          //   window.console.log('todo get shop orderdetail')
+          // }
+          break;
+        case 3:
+          this.getOrderDetail();
+          this.getNotYetOrderedUser();
+          this.getPassUser();
+          this.getShopDetail();
+          break;
+        case 4:
+          break;
+      }
+      return this.$store.state.orderStepPage;
     },
   },
   components: {

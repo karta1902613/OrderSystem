@@ -43,9 +43,14 @@ namespace OrderAPI.Model
         public object orderId { get; set; }
         public object orderName { get; set; }
         public object shopId { get; set; }
-        public object isLimit { get; set; }
-        public object limitTime { get; set; }
-        public object memo { get; set; }
+        public object? isLimit { get; set; }
+        public DateTime? limitTime { get; set; }
+        public string? memo { get; set; }
+        public object statusType { get; set; }
+        public object statusId { get; set; }
+        public object statusId1 { get; set; }
+        public object creatUser { get; set; }
+        public object actUser { get; set; }
     }
 
 }

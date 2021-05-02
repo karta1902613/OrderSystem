@@ -9,5 +9,7 @@ namespace OrderAPI.Model
     {
         public string userId { get; set; }
         public string userPassword { get; set; }
+        public string sysUserId { get; set; }       
+        public string userEmail { get; set; }       
     }
 }

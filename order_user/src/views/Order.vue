@@ -182,8 +182,19 @@ export default {
       this.$store.state.menu.splice(0);
       this.order.splice(0);
       res.data.menu.forEach((e) => {
+        window.console.log(e)
         this.$store.state.menu.push(e);
       });
+      this.$store.state.menu.push({
+        mealId: -1,
+        mealName:  'PASS',
+        mealPrice: 0,
+        orderId: res.data.orderId,
+        shopId:-1,
+        statusId: '10',
+        statusId1: '20',
+        statusName:'其他'       
+      })
       res.data.orderDetail.forEach((e) => {
         this.order.push(e);
         this.sumMoney += e.orderPrice;
@@ -257,7 +268,7 @@ export default {
         mealPrice: this.tempItem.mealPrice,
         mealQuantity: this.tempItem.mealQuantity,
         memo: this.tempItem.Memo,
-        statusId1: "10",
+        statusId1: this.tempItem.statusId1,
       };
       window.console.log(actRow);
       this.dialogLoding = true;

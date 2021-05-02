@@ -81,6 +81,7 @@ namespace OrderAPI.Controllers.Order
             JObject jo = new JObject();
             try
             {
+               
                 var param = new DynamicParameters();
                 param.Add("orderId", actRow.orderId.ToString());
                 param.Add("shopId", actRow.shopId.ToString());
@@ -96,6 +97,17 @@ namespace OrderAPI.Controllers.Order
                 param.Add("memo", actRow.memo.ToString());
                 param.Add("creatUser", HttpContext.User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.NameIdentifier).Value);
                 param.Add("creatTime", DateTime.Now);
+
+                strSql.Clear();
+                strSql.AppendLine("select COUNT(*) from C30_orderDetail where orderId = @orderId and sysUserId = @sysUserId and statusId1 = '20' and statusId = '10'");
+
+                var countPass = Tools.Dapper.QuerySingleOrDefault(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                if (int.Parse(countPass) > 0) throw new Exception("若要訂餐請先取消PASS");
+                strSql.Clear();
+                strSql.AppendLine("select COUNT(*) from C30_orderDetail where orderId = @orderId and sysUserId = @sysUserId and statusId1 = '10' and statusId = '10'");
+
+                var countOrder = Tools.Dapper.QuerySingleOrDefault(Tools.System.getConStr("MyDB"), strSql.ToString(), param);
+                if(actRow.statusId1.ToString() == "20" && int.Parse(countOrder)> 0) throw new Exception("訂單中尚有餐點");
                 strSql.Clear();
                 strSql.AppendLine("insert into C30_orderDetail (orderId,shopId,mealId,orderPrice,mealPrice,mealQuantity,sysUserId,statusId,stausType,statusId1,statusType1,memo,creatUser,creatTime)");
                 strSql.AppendLine("VALUES (@orderId,@shopId,@mealId,@orderPrice,@mealPrice,@mealQuantity,@sysUserId,@statusId,@stausType,@statusId1,@statusType1,@memo,@creatUser,@creatTime) ");

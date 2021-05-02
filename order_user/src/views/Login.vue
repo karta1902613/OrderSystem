@@ -23,6 +23,7 @@
                     name="login"
                     label="帳號"
                     type="text"
+                    v-model="userId"
                   ></v-text-field>
                   <v-text-field
                     id="password"
@@ -30,6 +31,7 @@
                     name="password"
                     label="密碼"
                     type="password"
+                    v-model="userPassword"
                   ></v-text-field>
                 </v-form>
               </v-card-text>
@@ -53,13 +55,15 @@ this.$store.dispatch("IsLogin");
   data: () => ({
     test:false,
     drawer: null,
+    userId:'',
+    userPassword:'',
   }),
   methods: {
     Login() {      
       let url = this.$store.state.api + "Admin/Login";
         let actRow = {
-          userId: 'kevin',
-          userPassword: '24369238',
+          userId: this.userId,
+          userPassword: this.userPassword,
         };
         this.axios.post(url, actRow).then((res) => {
           window.console.log(res)

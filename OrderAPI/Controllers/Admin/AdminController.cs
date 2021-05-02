@@ -110,10 +110,10 @@ namespace OrderAPI.Controllers.Admin
                 var claims = new List<Claim>   
                 {                    
                     new Claim("LoginTime", DateTime.Now.ToString()),
-                    new Claim(ClaimTypes.Name, "Kevin"),
-                    new Claim(ClaimTypes.Email, "karta1902613@gmail.com"),
+                    new Claim(ClaimTypes.Name, results.userId),
+                    new Claim(ClaimTypes.Email, results.userEmail),
                      new Claim(ClaimTypes.Role, "Administrator"),
-                     new Claim(ClaimTypes.NameIdentifier, "1"),
+                     new Claim(ClaimTypes.NameIdentifier, results.sysUserId),
                 };
 
                 var claimsIdentity = new ClaimsIdentity(

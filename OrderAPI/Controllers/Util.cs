@@ -159,11 +159,11 @@ namespace OrderAPI.Tools
 
     public class Dapper
     {
-        public static string ExecuteNonQuery(string conStr, string queryStr, DynamicParameters parma)
+        public static string ExecuteNonQuery(string conStr, string queryStr, object parma)
         {
-            using (var cn = new SqlConnection(conStr))
-            {                            
-                cn.Execute(queryStr, parma);
+            using (SqlConnection conn = new SqlConnection(conStr))
+            {
+                conn.Execute(queryStr, parma);
             }
             return "";
         }
@@ -177,6 +177,16 @@ namespace OrderAPI.Tools
             }
             return json;
         }
+        public static string QueryDataToJson(string conStr, string queryStr, object param)
+        {
+            var json = "";
+            using (SqlConnection conn = new SqlConnection(conStr))
+            {
+                var queryResult = conn.Query(queryStr,param); 
+                json = JsonConvert.SerializeObject(queryResult);
+            }
+            return json;
+        }
         public static string QueryFirstOrDefault(string conStr,string queryStr)
         {            
             using (SqlConnection conn = new SqlConnection(conStr))
@@ -186,15 +196,16 @@ namespace OrderAPI.Tools
                 return query;
             }
         }
-        public static string QuerySingleOrDefault(string conStr, string queryStr, DynamicParameters param)
+        public static string QuerySingleOrDefault(string conStr, string queryStr, object param)
         {
             //var id = "";
             using (SqlConnection conn = new SqlConnection(conStr))
             {
-                var query = conn.QuerySingleOrDefault(queryStr.ToString(), param);
-                String id = query.rowId.ToString();
-                query.Dump();
-                return id;
+                var id = conn.QuerySingle<int>(queryStr.ToString(), param);
+                //var query = conn.QuerySingleOrDefault(queryStr.ToString(), param);
+                //String id = query.values[0].toString();
+                //query.Dump();
+                return id.ToString();
             }
             
         }
