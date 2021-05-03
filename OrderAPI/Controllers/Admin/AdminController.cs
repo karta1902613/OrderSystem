@@ -99,7 +99,7 @@ namespace OrderAPI.Controllers.Admin
                 
                 using (SqlConnection conn = new SqlConnection(Tools.System.getConStr("MyDB")))
                 {
-                    string strSql = "Select * from S10_users where userId = @userId and userPassword=@userPassword";
+                    string strSql = "Select * from S10_users where userId = @userId and userPassword=@userPassword and statusId = '10'";
                     results = conn.QuerySingleOrDefault<Login>(strSql, param);
                 }
                 if (results == null) throw new Exception("請輸入正確的帳號密碼");

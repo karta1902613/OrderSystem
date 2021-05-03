@@ -444,28 +444,33 @@ export default {
           today.getDate() +
           "當日午餐";
       } else {
-        if (
-          this.$store.state.orderList[this.$store.state.order.orderId]
-            .limitTime != null
+        
+        window.console.log(this.$store.state.orderList)
+        window.console.log(this.$store.state.order.orderId)        
+           let order = this.$store.state.orderList.filter(e => e.orderId == this.$store.state.order.orderId)
+          window.console.log(this.$store.state.orderList.indexOf(order[0]))
+          let arrIdx = this.$store.state.orderList.indexOf(order[0])
+          window.console.log(this.$store.state.orderList[arrIdx])
+        if (          
+          this.$store.state.orderList[arrIdx].limitTime != null
         ) {
+          //window.console.log(this.$store.state.orderList.indexOf({orderId:this.$store.state.order.orderId}))
+       
+          //let arrInx = this.$store.state.orderList.indexOf({orderId:this.$store.state.order.orderId})
+          
           let unixTimeZero = Date.parse(
-            this.$store.state.orderList[this.$store.state.order.orderId]
-              .limitTime
+           this.$store.state.orderList[arrIdx].limitTime
           );
-          console.log(unixTimeZero);
+          console.log(unixTimeZero);          
+          window.console.log(arrIdx)
           let tmpdate = new Date(unixTimeZero);
           let tmpH = "0" + tmpdate.getHours();
           let tmpM = "0" + tmpdate.getMinutes();
           let formatted = tmpH + ":" + tmpM.substr(-2);
-          this.$store.state.orderList[
-            this.$store.state.order.orderId
-          ].limitTime = formatted;
+          this.$store.state.orderList[arrIdx].limitTime = formatted;
         }
 
-        this.$store.state.order = this.$store.state.orderList[
-          this.$store.state.order.orderId
-        ];
-        window.console.log(this.order);
+        this.$store.state.order = this.$store.state.orderList[arrIdx];        
         //this.$store.state.order = this.order
       }
     },
@@ -494,7 +499,7 @@ export default {
       };
       let url = this.$store.state.api + "O00010/GetOrderDetail";
       this.axios.post(url, actRow).then((res) => {
-        if (res.data.resultCode == "10") {
+        if (res.data.resultCode == "10") {          
           let orderSum = 0;
           res.data.orderDetail.forEach((e) => {
             orderSum += e.orderPrice;

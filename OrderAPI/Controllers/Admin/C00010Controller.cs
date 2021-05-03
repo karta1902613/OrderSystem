@@ -81,7 +81,7 @@ namespace OrderAPI.Controllers.Admin
                     }
                     
                 }
-                if (!string.IsNullOrEmpty(actRow.limitTime.ToString()))
+                if (!string.IsNullOrEmpty(actRow.limitTime))
                 {
                     strCond += ", limitTime =  '" + actRow.limitTime + "' ";
                 }

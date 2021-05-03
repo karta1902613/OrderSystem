@@ -14,7 +14,7 @@
               <v-img src="../assets/angry.png"></v-img>
             </v-list-item-avatar>
             <v-list-item-content class="pl-1">
-              <v-list-item-title>Kevin</v-list-item-title>
+              <v-list-item-title>{{this.$store.state.claims.name}}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-row>

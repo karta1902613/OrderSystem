@@ -182,6 +182,8 @@ export default {
       this.$store.state.menu.splice(0);
       this.order.splice(0);
       res.data.menu.forEach((e) => {
+        
+        e.statusId1 = '10' //10正常訂餐 20 Pass 當初把餐點類別抓回來 但這裡應該要是前者 先一律改10
         window.console.log(e)
         this.$store.state.menu.push(e);
       });
@@ -290,7 +292,7 @@ export default {
             mealsPriceSum: this.tempItem.mealPriceSum,
             Memo: this.tempItem.Memo,
           });
-          this.orderId++;
+          //this.orderId++;
           this.alertFlag = true;
           var timeoutID = window.setTimeout(
             () => (this.alertFlag = false),
